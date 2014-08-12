@@ -1,12 +1,13 @@
 # Reproducible Research: Peer Assessment 1
 
+This report was produced for Coursera's Reproducible Research class. Assignment 1.
 
 ## Loading and preprocessing the data
 
 The dataset should already be present in the same repository as this report.
 If you not, you can download it from the course web site https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
 
-Loads the data using read.csv
+We'll start loading the data using read.csv into the variable "data".
 ```{r}
 data <- read.csv("activity.csv")  
 summary(data)
@@ -14,55 +15,61 @@ summary(data)
 
 
 ## What is mean total number of steps taken per day?
-We'll first aggregate the data by date and store it in dailyAggData
+To find the average number of steps taken per day, We'll need to aggregate the data by date and store. We'll store this data in dailyAggData.
+
+As seen above, the data has some missing values, so we'll remove them with na.rm=TRUE.
 
 ```{r}
 dailyAggData <- aggregate(data$steps, by=list(data$date), FUN=sum, na.rm=TRUE)
-colnames(dailyAggData) <- c("date", "totalDailySteps")
+colnames(dailyAggData) <- c("date", "totalDailySteps")  
+summary(dailyAggData)
+
 ```
 
-Histogram:
+
 ```{r, echo=FALSE}
 hist(dailyAggData$totalDailySteps, main = "Average Total Number of Daily Steps", col="red", xlab="Steps")
 ```
 
-The mean is `r mean(dailyAggData$totalDailySteps)` and the median is `r median(dailyAggData$totalDailySteps)`.
+The mean is `r mean(dailyAggData$totalDailySteps)` and the median is `r median(dailyAggData$totalDailySteps)` total number of steps taken in a day.
 
 
 
 ## What is the average daily activity pattern?
 
+To find the average number of steps taken in a specific 5-minute interval, we'll aggregate the data by interval.
+
 ```{r}
 intervalAggData <- aggregate(data$steps, by=list(data$interval), FUN=mean, na.rm=TRUE)
-colnames(intervalAggData) <- c("interval", "meanDailySteps")
-
+colnames(intervalAggData) <- c("interval", "meanDailySteps")  
+summary(intervalAggData)
 ```
 
-plotting
+
 ```{r, echo=FALSE}
 plot(intervalAggData$interval, intervalAggData$meanDailySteps, type="l", xlab="5 minute interval", ylab="Average Daily Steps")
 ```
 
-finding which 5 min interval has max
+To find which 5-minute interval has the maximum number of steps, we'll use the which.max function on the data above (intervalAggData).
 
 
 ```{r}
-result <- intervalAggData[which.max(intervalAggData$meanDailySteps),]
-
+result <- intervalAggData[which.max(intervalAggData$meanDailySteps),]  
+result
 ```
 
-so the interval `r result[1]` has the max avg number of steps `r result[2]`
+So the interval `r result[1]` has the max avg number of steps `r result[2]`
 
 
 ## Imputing missing values
-
+As seen above, the original dataset has some missing data.
 ```{r}
 missingValues <- sum(is.na(data$steps))
 ```
-total number of rows with NA: `r missingValues`
+The total number of rows with NA is: `r missingValues`
 
 
-For these missing values, we'll fill them with the daily average for that 5-minute interval calculated previously (aggData) and we'll store this in a new dataset, filledData
+For these missing values, we'll fill them with the daily average for that 5-minute interval calculated previously (intervalAggData) and we'll store this in a new variable "filledData".
 
 ```{r}
 filledData <- data
@@ -70,6 +77,7 @@ filledData[which(is.na(filledData$steps)),'steps'] <- sapply(data[which(is.na(fi
 summary(filledData)
 ```
 
+filledData is not missing values. We'll aggregate this new data by date.
 
 ```{r, echo=FALSE}
 dailyFilledAggData <- aggregate(filledData$steps, by=list(filledData$date), FUN=sum, na.rm=TRUE)
@@ -78,21 +86,24 @@ colnames(dailyFilledAggData) <- c("date", "totalDailySteps")
 hist(dailyFilledAggData$totalDailySteps, main = "Steps Histogram", col="red", xlab="steps per day")
 ```
 
-The new mean is `r mean(dailyFilledAggData$totalDailySteps)` and the median is `r median(dailyFilledAggData$totalDailySteps)`.
+The new mean is `r mean(dailyFilledAggData$totalDailySteps)` and the new median is `r median(dailyFilledAggData$totalDailySteps)` total steps taken in a day.
 
 
 By filling the empty data, both the mean and the median moved towards the "center" of the dataset.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-To compare the activty patterns on weekdays vs weekends, we'll first add a new column "weedayOrWeekend" to filledData
+To compare the activty patterns on weekdays vs weekends, we'll first add a new column "weedayOrWeekend" to filledData.
 ```{r}
 filledData$weekdayOrWeekend <- sapply(filledData$date, function (x) if (weekdays(strptime(x, "%Y-%m-%d")) == "Saturday" | weekdays(strptime(x, "%Y-%m-%d")) == "Sunday"){ factor("weekend") } else { factor("weekday") })
 ```
 
-We'll then aggregate the data by both interval and the new computed column
+We'll then aggregate the data by both interval and the new computed column.
+
 ```{r}
 filledIntervalAndDayAggData <- aggregate(filledData$steps, by=list(filledData$interval, filledData$weekdayOrWeekend), FUN=mean, na.rm=TRUE)
-colnames(filledIntervalAndDayAggData) <- c("Interval", "weekdayOrWeekend", "meanDailySteps")
+colnames(filledIntervalAndDayAggData) <- c("Interval", "weekdayOrWeekend", "meanDailySteps")  
+summary(filledIntervalAndDayAggData)
+
 ```
 
 ```{r}
